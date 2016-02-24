@@ -9,6 +9,8 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
 import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 object Main {
 
@@ -30,9 +32,13 @@ object Main {
       s <- sys.env.get("OPENSHIFT_SCALA_PORT")
       port <- Try(s.toInt).toOption
     } yield port).getOrElse(8080)
-    val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", port)
-    println(s"Server listening at http://0.0.0.0:$port/\nPress RETURN to stop...")
-    scala.io.StdIn.readLine()
-    bindingFuture.flatMap(_.unbind()).onComplete(_ => system.terminate())
+    Http().bindAndHandle(route, "0.0.0.0", port) andThen {
+      case Success(r) =>
+        println(s"Listening at ${r.localAddress}")
+      case Failure(ex) =>
+        println(s"Failed to bind to ${port}:")
+        ex.printStackTrace()
+        system.terminate()
+    }
   }
 }
