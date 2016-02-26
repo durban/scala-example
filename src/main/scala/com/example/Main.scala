@@ -15,7 +15,7 @@ import akka.event.Logging
 
 object Main {
 
-  implicit val system = ActorSystem("my-system")
+  implicit val system = ActorSystem("hello-world")
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
 
