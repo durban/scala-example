@@ -11,12 +11,15 @@ import akka.http.scaladsl.Http
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
+import akka.event.Logging
 
 object Main {
 
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
+
+  val log = Logging(system, "Main")
 
   val route =
     path("hello") {
@@ -34,10 +37,9 @@ object Main {
     } yield port).getOrElse(8080)
     Http().bindAndHandle(route, "0.0.0.0", port) andThen {
       case Success(r) =>
-        println(s"Listening at ${r.localAddress}")
+        log.info(s"Listening at ${r.localAddress}")
       case Failure(ex) =>
-        println(s"Failed to bind to ${port}:")
-        ex.printStackTrace()
+        log.error(ex, s"Failed to bind to ${port}")
         system.terminate()
     }
   }
